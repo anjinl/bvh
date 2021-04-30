@@ -4,8 +4,7 @@ use std::f32;
 use std::fmt;
 use std::ops::Index;
 
-use approx::relative_eq;
-use nalgebra::{Point3, Vector3};
+use crate::math::*;
 
 use crate::axis::Axis;
 
@@ -14,10 +13,10 @@ use crate::axis::Axis;
 #[allow(clippy::upper_case_acronyms)]
 pub struct AABB {
     /// Minimum coordinates
-    pub min: Point3<f32>,
+    pub min: BVHPoint3,
 
     /// Maximum coordinates
-    pub max: Point3<f32>,
+    pub max: BVHPoint3,
 }
 
 impl fmt::Display for AABB {
@@ -36,14 +35,14 @@ pub trait Bounded {
     /// # Examples
     /// ```
     /// use bvh::aabb::{AABB, Bounded};
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
     /// struct Something;
     ///
     /// impl Bounded for Something {
     ///     fn aabb(&self) -> AABB {
-    ///         let point1 = Point3::new(0.0,0.0,0.0);
-    ///         let point2 = Point3::new(1.0,1.0,1.0);
+    ///         let point1 = BVHPoint3::new(0.0,0.0,0.0);
+    ///         let point2 = BVHPoint3::new(1.0,1.0,1.0);
     ///         AABB::with_bounds(point1, point2)
     ///     }
     /// }
@@ -51,8 +50,8 @@ pub trait Bounded {
     /// let something = Something;
     /// let aabb = something.aabb();
     ///
-    /// assert!(aabb.contains(&Point3::new(0.0,0.0,0.0)));
-    /// assert!(aabb.contains(&Point3::new(1.0,1.0,1.0)));
+    /// assert!(aabb.contains(&BVHPoint3::new(0.0,0.0,0.0)));
+    /// assert!(aabb.contains(&BVHPoint3::new(1.0,1.0,1.0)));
     /// ```
     ///
     /// [`AABB`]: struct.AABB.html
@@ -66,16 +65,16 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let aabb = AABB::with_bounds(Point3::new(-1.0,-1.0,-1.0), Point3::new(1.0,1.0,1.0));
+    /// let aabb = AABB::with_bounds(BVHPoint3::new(-1.0,-1.0,-1.0), BVHPoint3::new(1.0,1.0,1.0));
     /// assert_eq!(aabb.min.x, -1.0);
     /// assert_eq!(aabb.max.z, 1.0);
     /// ```
     ///
     /// [`AABB`]: struct.AABB.html
     ///
-    pub fn with_bounds(min: Point3<f32>, max: Point3<f32>) -> AABB {
+    pub fn with_bounds(min: BVHPoint3, max: BVHPoint3) -> AABB {
         AABB { min, max }
     }
 
@@ -107,8 +106,8 @@ impl AABB {
     ///
     pub fn empty() -> AABB {
         AABB {
-            min: Point3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
-            max: Point3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY),
+            min: BVHPoint3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
+            max: BVHPoint3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY),
         }
     }
 
@@ -117,11 +116,11 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let aabb = AABB::with_bounds(Point3::new(-1.0, -1.0, -1.0), Point3::new(1.0, 1.0, 1.0));
-    /// let point_inside = Point3::new(0.125, -0.25, 0.5);
-    /// let point_outside = Point3::new(1.0, -2.0, 4.0);
+    /// let aabb = AABB::with_bounds(BVHPoint3::new(-1.0, -1.0, -1.0), BVHPoint3::new(1.0, 1.0, 1.0));
+    /// let point_inside = BVHPoint3::new(0.125, -0.25, 0.5);
+    /// let point_outside = BVHPoint3::new(1.0, -2.0, 4.0);
     ///
     /// assert!(aabb.contains(&point_inside));
     /// assert!(!aabb.contains(&point_outside));
@@ -130,7 +129,7 @@ impl AABB {
     /// [`AABB`]: struct.AABB.html
     /// [`Point3`]: http://nalgebra.org/doc/nalgebra/struct.Point3.html
     ///
-    pub fn contains(&self, p: &Point3<f32>) -> bool {
+    pub fn contains(&self, p: &BVHPoint3) -> bool {
         p.x >= self.min.x
             && p.x <= self.max.x
             && p.y >= self.min.y
@@ -146,11 +145,11 @@ impl AABB {
     /// ```
     /// use bvh::EPSILON;
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let aabb = AABB::with_bounds(Point3::new(-1.0, -1.0, -1.0), Point3::new(1.0, 1.0, 1.0));
-    /// let point_barely_outside = Point3::new(1.000_000_1, -1.000_000_1, 1.000_000_001);
-    /// let point_outside = Point3::new(1.0, -2.0, 4.0);
+    /// let aabb = AABB::with_bounds(BVHPoint3::new(-1.0, -1.0, -1.0), BVHPoint3::new(1.0, 1.0, 1.0));
+    /// let point_barely_outside = BVHPoint3::new(1.000_000_1, -1.000_000_1, 1.000_000_001);
+    /// let point_outside = BVHPoint3::new(1.0, -2.0, 4.0);
     ///
     /// assert!(aabb.approx_contains_eps(&point_barely_outside, EPSILON));
     /// assert!(!aabb.approx_contains_eps(&point_outside, EPSILON));
@@ -159,7 +158,7 @@ impl AABB {
     /// [`AABB`]: struct.AABB.html
     /// [`Point3`]: http://nalgebra.org/doc/nalgebra/struct.Point3.html
     ///
-    pub fn approx_contains_eps(&self, p: &Point3<f32>, epsilon: f32) -> bool {
+    pub fn approx_contains_eps(&self, p: &BVHPoint3, epsilon: f32) -> bool {
         (p.x - self.min.x) > -epsilon
             && (p.x - self.max.x) < epsilon
             && (p.y - self.min.y) > -epsilon
@@ -175,10 +174,10 @@ impl AABB {
     /// ```
     /// use bvh::EPSILON;
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let aabb = AABB::with_bounds(Point3::new(-1.0, -1.0, -1.0), Point3::new(1.0, 1.0, 1.0));
-    /// let point_barely_outside = Point3::new(1.000_000_1, 1.000_000_1, 1.000_000_1);
+    /// let aabb = AABB::with_bounds(BVHPoint3::new(-1.0, -1.0, -1.0), BVHPoint3::new(1.0, 1.0, 1.0));
+    /// let point_barely_outside = BVHPoint3::new(1.000_000_1, 1.000_000_1, 1.000_000_1);
     /// let center = aabb.center();
     /// let inner_aabb = AABB::with_bounds(center, point_barely_outside);
     ///
@@ -198,11 +197,11 @@ impl AABB {
     /// ```
     /// use bvh::EPSILON;
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let aabb = AABB::with_bounds(Point3::new(-1.0, -1.0, -1.0), Point3::new(1.0, 1.0, 1.0));
-    /// let point_barely_outside_min = Point3::new(-1.000_000_1, -1.000_000_1, -1.000_000_1);
-    /// let point_barely_outside_max = Point3::new(1.000_000_1, 1.000_000_1, 1.000_000_1);
+    /// let aabb = AABB::with_bounds(BVHPoint3::new(-1.0, -1.0, -1.0), BVHPoint3::new(1.0, 1.0, 1.0));
+    /// let point_barely_outside_min = BVHPoint3::new(-1.000_000_1, -1.000_000_1, -1.000_000_1);
+    /// let point_barely_outside_max = BVHPoint3::new(1.000_000_1, 1.000_000_1, 1.000_000_1);
     /// let other = AABB::with_bounds(point_barely_outside_min, point_barely_outside_max);
     ///
     /// assert!(aabb.relative_eq(&other, EPSILON));
@@ -210,8 +209,14 @@ impl AABB {
     ///
     /// [`AABB`]: struct.AABB.html
     pub fn relative_eq(&self, other: &AABB, epsilon: f32) -> bool {
-        relative_eq!(self.min, other.min, epsilon = epsilon)
-            && relative_eq!(self.max, other.max, epsilon = epsilon)
+        return f32::abs(self.min.x - other.min.x) < epsilon &&
+            f32::abs(self.min.y - other.min.y) < epsilon &&
+            f32::abs(self.min.z - other.min.z) < epsilon &&
+            f32::abs(self.max.x - other.max.x) < epsilon &&
+            f32::abs(self.max.y - other.max.y) < epsilon &&
+            f32::abs(self.max.z - other.max.z) < epsilon;
+        // relative_eq!(self.min, other.min, epsilon = epsilon)
+        //     && relative_eq!(self.max, other.max, epsilon = epsilon)
     }
 
     /// Returns a new minimal [`AABB`] which contains both this [`AABB`] and `other`.
@@ -220,15 +225,15 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let aabb1 = AABB::with_bounds(Point3::new(-101.0, 0.0, 0.0), Point3::new(-100.0, 1.0, 1.0));
-    /// let aabb2 = AABB::with_bounds(Point3::new(100.0, 0.0, 0.0), Point3::new(101.0, 1.0, 1.0));
+    /// let aabb1 = AABB::with_bounds(BVHPoint3::new(-101.0, 0.0, 0.0), BVHPoint3::new(-100.0, 1.0, 1.0));
+    /// let aabb2 = AABB::with_bounds(BVHPoint3::new(100.0, 0.0, 0.0), BVHPoint3::new(101.0, 1.0, 1.0));
     /// let joint = aabb1.join(&aabb2);
     ///
-    /// let point_inside_aabb1 = Point3::new(-100.5, 0.5, 0.5);
-    /// let point_inside_aabb2 = Point3::new(100.5, 0.5, 0.5);
-    /// let point_inside_joint = Point3::new(0.0, 0.5, 0.5);
+    /// let point_inside_aabb1 = BVHPoint3::new(-100.5, 0.5, 0.5);
+    /// let point_inside_aabb2 = BVHPoint3::new(100.5, 0.5, 0.5);
+    /// let point_inside_joint = BVHPoint3::new(0.0, 0.5, 0.5);
     ///
     /// # assert!(aabb1.contains(&point_inside_aabb1));
     /// # assert!(!aabb1.contains(&point_inside_aabb2));
@@ -247,12 +252,12 @@ impl AABB {
     ///
     pub fn join(&self, other: &AABB) -> AABB {
         AABB::with_bounds(
-            Point3::new(
+            BVHPoint3::new(
                 self.min.x.min(other.min.x),
                 self.min.y.min(other.min.y),
                 self.min.z.min(other.min.z),
             ),
-            Point3::new(
+            BVHPoint3::new(
                 self.max.x.max(other.max.x),
                 self.max.y.max(other.max.y),
                 self.max.z.max(other.max.z),
@@ -265,18 +270,18 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::{Point3, Vector3};
+    /// use bvh::math::*;
     ///
-    /// let size = Vector3::new(1.0, 1.0, 1.0);
-    /// let aabb_pos = Point3::new(-101.0, 0.0, 0.0);
+    /// let size = BVHVector3::new(1.0, 1.0, 1.0);
+    /// let aabb_pos = BVHPoint3::new(-101.0, 0.0, 0.0);
     /// let mut aabb = AABB::with_bounds(aabb_pos, aabb_pos + size);
     ///
-    /// let other_pos = Point3::new(100.0, 0.0, 0.0);
+    /// let other_pos = BVHPoint3::new(100.0, 0.0, 0.0);
     /// let other = AABB::with_bounds(other_pos, other_pos + size);
     ///
     /// let point_inside_aabb = aabb_pos + size / 2.0;
     /// let point_inside_other = other_pos + size / 2.0;
-    /// let point_inside_joint = Point3::new(0.0, 0.0, 0.0) + size / 2.0;
+    /// let point_inside_joint = BVHPoint3::new(0.0, 0.0, 0.0) + size / 2.0;
     ///
     /// # assert!(aabb.contains(&point_inside_aabb));
     /// # assert!(!aabb.contains(&point_inside_other));
@@ -296,12 +301,12 @@ impl AABB {
     /// [`AABB::join`]: struct.AABB.html
     ///
     pub fn join_mut(&mut self, other: &AABB) {
-        self.min = Point3::new(
+        self.min = BVHPoint3::new(
             self.min.x.min(other.min.x),
             self.min.y.min(other.min.y),
             self.min.z.min(other.min.z),
         );
-        self.max = Point3::new(
+        self.max = BVHPoint3::new(
             self.max.x.max(other.max.x),
             self.max.y.max(other.max.y),
             self.max.z.max(other.max.z),
@@ -314,11 +319,11 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let point1 = Point3::new(0.0, 0.0, 0.0);
-    /// let point2 = Point3::new(1.0, 1.0, 1.0);
-    /// let point3 = Point3::new(2.0, 2.0, 2.0);
+    /// let point1 = BVHPoint3::new(0.0, 0.0, 0.0);
+    /// let point2 = BVHPoint3::new(1.0, 1.0, 1.0);
+    /// let point3 = BVHPoint3::new(2.0, 2.0, 2.0);
     ///
     /// let aabb = AABB::empty();
     /// assert!(!aabb.contains(&point1));
@@ -334,14 +339,14 @@ impl AABB {
     /// [`AABB`]: struct.AABB.html
     /// [`Point3`]: http://nalgebra.org/doc/nalgebra/struct.Point3.html
     ///
-    pub fn grow(&self, other: &Point3<f32>) -> AABB {
+    pub fn grow(&self, other: &BVHPoint3) -> AABB {
         AABB::with_bounds(
-            Point3::new(
+            BVHPoint3::new(
                 self.min.x.min(other.x),
                 self.min.y.min(other.y),
                 self.min.z.min(other.z),
             ),
-            Point3::new(
+            BVHPoint3::new(
                 self.max.x.max(other.x),
                 self.max.y.max(other.y),
                 self.max.z.max(other.z),
@@ -354,11 +359,11 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let point1 = Point3::new(0.0, 0.0, 0.0);
-    /// let point2 = Point3::new(1.0, 1.0, 1.0);
-    /// let point3 = Point3::new(2.0, 2.0, 2.0);
+    /// let point1 = BVHPoint3::new(0.0, 0.0, 0.0);
+    /// let point2 = BVHPoint3::new(1.0, 1.0, 1.0);
+    /// let point3 = BVHPoint3::new(2.0, 2.0, 2.0);
     ///
     /// let mut aabb = AABB::empty();
     /// assert!(!aabb.contains(&point1));
@@ -375,13 +380,13 @@ impl AABB {
     /// [`AABB::grow`]: struct.AABB.html
     /// [`Point3`]: http://nalgebra.org/doc/nalgebra/struct.Point3.html
     ///
-    pub fn grow_mut(&mut self, other: &Point3<f32>) {
-        self.min = Point3::new(
+    pub fn grow_mut(&mut self, other: &BVHPoint3) {
+        self.min = BVHPoint3::new(
             self.min.x.min(other.x),
             self.min.y.min(other.y),
             self.min.z.min(other.z),
         );
-        self.max = Point3::new(
+        self.max = BVHPoint3::new(
             self.max.x.max(other.x),
             self.max.y.max(other.y),
             self.max.z.max(other.z),
@@ -394,14 +399,14 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::{AABB, Bounded};
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
     /// struct Something;
     ///
     /// impl Bounded for Something {
     ///     fn aabb(&self) -> AABB {
-    ///         let point1 = Point3::new(0.0,0.0,0.0);
-    ///         let point2 = Point3::new(1.0,1.0,1.0);
+    ///         let point1 = BVHPoint3::new(0.0,0.0,0.0);
+    ///         let point2 = BVHPoint3::new(1.0,1.0,1.0);
     ///         AABB::with_bounds(point1, point2)
     ///     }
     /// }
@@ -426,16 +431,16 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let aabb = AABB::with_bounds(Point3::new(-1.0,-1.0,-1.0), Point3::new(1.0,1.0,1.0));
+    /// let aabb = AABB::with_bounds(BVHPoint3::new(-1.0,-1.0,-1.0), BVHPoint3::new(1.0,1.0,1.0));
     /// let size = aabb.size();
     /// assert!(size.x == 2.0 && size.y == 2.0 && size.z == 2.0);
     /// ```
     ///
     /// [`AABB`]: struct.AABB.html
     ///
-    pub fn size(&self) -> Vector3<f32> {
+    pub fn size(&self) -> BVHVector3 {
         self.max - self.min
     }
 
@@ -444,10 +449,10 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let min = Point3::new(41.0,41.0,41.0);
-    /// let max = Point3::new(43.0,43.0,43.0);
+    /// let min = BVHPoint3::new(41.0,41.0,41.0);
+    /// let max = BVHPoint3::new(43.0,43.0,43.0);
     ///
     /// let aabb = AABB::with_bounds(min, max);
     /// let center = aabb.center();
@@ -457,7 +462,7 @@ impl AABB {
     /// [`AABB`]: struct.AABB.html
     /// [`Point3`]: http://nalgebra.org/doc/nalgebra/struct.Point3.html
     ///
-    pub fn center(&self) -> Point3<f32> {
+    pub fn center(&self) -> BVHPoint3 {
         self.min + (self.size() / 2.0)
     }
 
@@ -467,13 +472,13 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
     /// let empty_aabb = AABB::empty();
     /// assert!(empty_aabb.is_empty());
     ///
-    /// let min = Point3::new(41.0,41.0,41.0);
-    /// let max = Point3::new(43.0,43.0,43.0);
+    /// let min = BVHPoint3::new(41.0,41.0,41.0);
+    /// let max = BVHPoint3::new(43.0,43.0,43.0);
     ///
     /// let aabb = AABB::with_bounds(min, max);
     /// assert!(!aabb.is_empty());
@@ -490,10 +495,10 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let min = Point3::new(41.0,41.0,41.0);
-    /// let max = Point3::new(43.0,43.0,43.0);
+    /// let min = BVHPoint3::new(41.0,41.0,41.0);
+    /// let max = BVHPoint3::new(43.0,43.0,43.0);
     ///
     /// let aabb = AABB::with_bounds(min, max);
     /// let surface_area = aabb.surface_area();
@@ -512,10 +517,10 @@ impl AABB {
     /// # Examples
     /// ```
     /// use bvh::aabb::AABB;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let min = Point3::new(41.0,41.0,41.0);
-    /// let max = Point3::new(43.0,43.0,43.0);
+    /// let min = BVHPoint3::new(41.0,41.0,41.0);
+    /// let max = BVHPoint3::new(43.0,43.0,43.0);
     ///
     /// let aabb = AABB::with_bounds(min, max);
     /// let volume = aabb.volume();
@@ -535,10 +540,10 @@ impl AABB {
     /// ```
     /// use bvh::aabb::AABB;
     /// use bvh::axis::Axis;
-    /// use bvh::nalgebra::Point3;
+    /// use bvh::math::BVHPoint3;
     ///
-    /// let min = Point3::new(-100.0,0.0,0.0);
-    /// let max = Point3::new(100.0,0.0,0.0);
+    /// let min = BVHPoint3::new(-100.0,0.0,0.0);
+    /// let max = BVHPoint3::new(100.0,0.0,0.0);
     ///
     /// let aabb = AABB::with_bounds(min, max);
     /// let axis = aabb.largest_axis();
@@ -576,10 +581,10 @@ impl Default for AABB {
 /// # Examples
 /// ```
 /// use bvh::aabb::AABB;
-/// use bvh::nalgebra::Point3;
+/// use bvh::math::BVHPoint3;
 ///
-/// let min = Point3::new(3.0,4.0,5.0);
-/// let max = Point3::new(123.0,123.0,123.0);
+/// let min = BVHPoint3::new(3.0,4.0,5.0);
+/// let max = BVHPoint3::new(123.0,123.0,123.0);
 ///
 /// let aabb = AABB::with_bounds(min, max);
 /// assert_eq!(aabb[0], min);
@@ -589,9 +594,9 @@ impl Default for AABB {
 /// [`AABB`]: struct.AABB.html
 ///
 impl Index<usize> for AABB {
-    type Output = Point3<f32>;
+    type Output = BVHPoint3;
 
-    fn index(&self, index: usize) -> &Point3<f32> {
+    fn index(&self, index: usize) -> &BVHPoint3 {
         if index == 0 {
             &self.min
         } else {
@@ -605,10 +610,10 @@ impl Index<usize> for AABB {
 /// # Examples
 /// ```
 /// use bvh::aabb::{AABB, Bounded};
-/// use bvh::nalgebra::Point3;
+/// use bvh::math::BVHPoint3;
 ///
-/// let point_a = Point3::new(3.0,4.0,5.0);
-/// let point_b = Point3::new(17.0,18.0,19.0);
+/// let point_a = BVHPoint3::new(3.0,4.0,5.0);
+/// let point_b = BVHPoint3::new(17.0,18.0,19.0);
 /// let aabb = AABB::empty().grow(&point_a).grow(&point_b);
 ///
 /// let aabb_aabb = aabb.aabb();
@@ -631,9 +636,9 @@ impl Bounded for AABB {
 /// # Examples
 /// ```
 /// use bvh::aabb::{AABB, Bounded};
-/// use bvh::nalgebra::Point3;
+/// use bvh::math::BVHPoint3;
 ///
-/// let point = Point3::new(3.0,4.0,5.0);
+/// let point = BVHPoint3::new(3.0,4.0,5.0);
 ///
 /// let aabb = point.aabb();
 /// assert!(aabb.contains(&point));
@@ -642,7 +647,7 @@ impl Bounded for AABB {
 /// [`Bounded`]: trait.Bounded.html
 /// [`Point3`]: http://nalgebra.org/doc/nalgebra/struct.Point3.html
 ///
-impl Bounded for Point3<f32> {
+impl Bounded for BVHPoint3 {
     fn aabb(&self) -> AABB {
         AABB::with_bounds(*self, *self)
     }
@@ -653,8 +658,8 @@ mod tests {
     use crate::aabb::{Bounded, AABB};
     use crate::testbase::{tuple_to_point, tuple_to_vector, TupleVec};
     use crate::EPSILON;
+    use crate::math::*;
 
-    use nalgebra::{Point3, Vector3};
     use quickcheck::quickcheck;
 
     // Test whether an empty `AABB` does not contains anything.
@@ -709,7 +714,7 @@ mod tests {
             let points = [a.0, a.1, a.2, a.3, a.4, b.0, b.1, b.2, b.3, b.4];
 
             // Convert these points to `Point3`
-            let points = points.iter().map(tuple_to_point).collect::<Vec<Point3<f32>>>();
+            let points = points.iter().map(tuple_to_point).collect::<Vec<BVHPoint3>>();
 
             // Create two `AABB`s. One spanned the first five points,
             // the other by the last five points
@@ -754,8 +759,8 @@ mod tests {
             let inside_mmm = center - size_half;
 
             // Generate two points which are outside the AABB
-            let outside_ppp = inside_ppp + Vector3::new(0.1, 0.1, 0.1);
-            let outside_mmm = inside_mmm - Vector3::new(0.1, 0.1, 0.1);
+            let outside_ppp = inside_ppp + BVHVector3::new(0.1, 0.1, 0.1);
+            let outside_mmm = inside_mmm - BVHVector3::new(0.1, 0.1, 0.1);
 
             assert!(aabb.approx_contains_eps(&inside_ppp, EPSILON));
             assert!(aabb.approx_contains_eps(&inside_mmm, EPSILON));
@@ -781,7 +786,7 @@ mod tests {
         fn test_surface_area_cube(pos: TupleVec, size: f32) -> bool {
             // Generate some non-empty AABB
             let pos = tuple_to_point(&pos);
-            let size_vec = Vector3::new(size, size, size);
+            let size_vec = BVHVector3::new(size, size, size);
             let aabb = AABB::with_bounds(pos, pos + size_vec);
 
             // Check its surface area

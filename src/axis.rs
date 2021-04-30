@@ -1,7 +1,7 @@
 //! Axis enum for indexing three-dimensional structures.
 
 #![allow(unused)]
-use nalgebra::{Point3, Vector3};
+use crate::math::*;
 use std::fmt::{Display, Formatter, Result};
 use std::ops::{Index, IndexMut};
 
@@ -26,13 +26,12 @@ struct MyType<T>(T);
 ///
 /// ```
 /// extern crate bvh;
-/// extern crate nalgebra;
 ///
 /// use bvh::axis::Axis;
-/// use nalgebra::Point3;
+/// use bvh::math::*;
 ///
 /// # fn main() {
-/// let mut position: Point3<f32> = Point3::new(1.0, 2.0, 3.0);
+/// let mut position: BVHPoint3 = BVHPoint3::new(1.0, 2.0, 3.0);
 /// position[Axis::X] = 1000.0;
 ///
 /// assert_eq!(position[Axis::X], 1000.0);
@@ -75,7 +74,7 @@ impl Index<Axis> for [f32] {
 }
 
 /// Make `Point3` indexable by `Axis`.
-impl Index<Axis> for Point3<f32> {
+impl Index<Axis> for BVHPoint3 {
     type Output = f32;
 
     fn index(&self, axis: Axis) -> &f32 {
@@ -88,7 +87,7 @@ impl Index<Axis> for Point3<f32> {
 }
 
 /// Make `Vector3` indexable by `Axis`.
-impl Index<Axis> for MyType<Vector3<f32>> {
+impl Index<Axis> for MyType<BVHVector3> {
     type Output = f32;
 
     fn index(&self, axis: Axis) -> &f32 {
@@ -108,7 +107,7 @@ impl IndexMut<Axis> for [f32] {
 }
 
 /// Make `Point3` mutably accessible by `Axis`.
-impl IndexMut<Axis> for Point3<f32> {
+impl IndexMut<Axis> for BVHPoint3 {
     fn index_mut(&mut self, axis: Axis) -> &mut f32 {
         match axis {
             Axis::X => &mut self.x,
@@ -119,7 +118,7 @@ impl IndexMut<Axis> for Point3<f32> {
 }
 
 /// Make `Vector3` mutably accessible by `Axis`.
-impl IndexMut<Axis> for MyType<Vector3<f32>> {
+impl IndexMut<Axis> for MyType<BVHVector3> {
     fn index_mut(&mut self, axis: Axis) -> &mut f32 {
         match axis {
             Axis::X => &mut self.0.x,

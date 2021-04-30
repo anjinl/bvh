@@ -146,7 +146,7 @@ mod tests {
     use crate::bvh::BVH;
     use crate::ray::Ray;
     use crate::testbase::{generate_aligned_boxes, UnitBox};
-    use nalgebra::{Point3, Vector3};
+    use crate::math::*;
     use std::collections::HashSet;
 
     /// Creates a `BVH` for a fixed scene structure.
@@ -159,8 +159,8 @@ mod tests {
     /// Given a ray, a bounding hierarchy, the complete list of shapes in the scene and a list of
     /// expected hits, verifies, whether the ray hits only the expected shapes.
     fn traverse_and_verify_vec(
-        ray_origin: Point3<f32>,
-        ray_direction: Vector3<f32>,
+        ray_origin: BVHPoint3,
+        ray_direction: BVHVector3,
         all_shapes: &Vec<UnitBox>,
         bvh: &BVH,
         expected_shapes: &HashSet<i32>,
@@ -175,8 +175,8 @@ mod tests {
     }
 
     fn traverse_and_verify_iterator(
-        ray_origin: Point3<f32>,
-        ray_direction: Vector3<f32>,
+        ray_origin: BVHPoint3,
+        ray_direction: BVHVector3,
         all_shapes: &Vec<UnitBox>,
         bvh: &BVH,
         expected_shapes: &HashSet<i32>,
@@ -193,8 +193,8 @@ mod tests {
     }
 
     fn traverse_and_verify_base(
-        ray_origin: Point3<f32>,
-        ray_direction: Vector3<f32>,
+        ray_origin: BVHPoint3,
+        ray_direction: BVHVector3,
         all_shapes: &Vec<UnitBox>,
         bvh: &BVH,
         expected_shapes: &HashSet<i32>,
@@ -209,8 +209,8 @@ mod tests {
 
         {
             // Define a ray which traverses the x-axis from afar.
-            let origin = Point3::new(-1000.0, 0.0, 0.0);
-            let direction = Vector3::new(1.0, 0.0, 0.0);
+            let origin = BVHPoint3::new(-1000.0, 0.0, 0.0);
+            let direction = BVHVector3::new(1.0, 0.0, 0.0);
             let mut expected_shapes = HashSet::new();
 
             // It should hit everything.
@@ -222,8 +222,8 @@ mod tests {
 
         {
             // Define a ray which traverses the y-axis from afar.
-            let origin = Point3::new(0.0, -1000.0, 0.0);
-            let direction = Vector3::new(0.0, 1.0, 0.0);
+            let origin = BVHPoint3::new(0.0, -1000.0, 0.0);
+            let direction = BVHVector3::new(0.0, 1.0, 0.0);
 
             // It should hit only one box.
             let mut expected_shapes = HashSet::new();
@@ -233,8 +233,8 @@ mod tests {
 
         {
             // Define a ray which intersects the x-axis diagonally.
-            let origin = Point3::new(6.0, 0.5, 0.0);
-            let direction = Vector3::new(-2.0, -1.0, 0.0);
+            let origin = BVHPoint3::new(6.0, 0.5, 0.0);
+            let direction = BVHVector3::new(-2.0, -1.0, 0.0);
 
             // It should hit exactly three boxes.
             let mut expected_shapes = HashSet::new();

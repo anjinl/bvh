@@ -18,22 +18,22 @@
 //! use bvh::aabb::{AABB, Bounded};
 //! use bvh::bounding_hierarchy::{BoundingHierarchy, BHShape};
 //! use bvh::bvh::BVH;
-//! use bvh::nalgebra::{Point3, Vector3};
+//! use bvh::math::*;
 //! use bvh::ray::Ray;
 //!
-//! let origin = Point3::new(0.0,0.0,0.0);
-//! let direction = Vector3::new(1.0,0.0,0.0);
+//! let origin = BVHPoint3::new(0.0,0.0,0.0);
+//! let direction = BVHVector3::new(1.0,0.0,0.0);
 //! let ray = Ray::new(origin, direction);
 //!
 //! struct Sphere {
-//!     position: Point3<f32>,
+//!     position: BVHPoint3,
 //!     radius: f32,
 //!     node_index: usize,
 //! }
 //!
 //! impl Bounded for Sphere {
 //!     fn aabb(&self) -> AABB {
-//!         let half_size = Vector3::new(self.radius, self.radius, self.radius);
+//!         let half_size = BVHVector3::new(self.radius, self.radius, self.radius);
 //!         let min = self.position - half_size;
 //!         let max = self.position + half_size;
 //!         AABB::with_bounds(min, max)
@@ -52,7 +52,7 @@
 //!
 //! let mut spheres = Vec::new();
 //! for i in 0..1000u32 {
-//!     let position = Point3::new(i as f32, i as f32, i as f32);
+//!     let position = BVHPoint3::new(i as f32, i as f32, i as f32);
 //!     let radius = (i % 10) as f32 + 1.0;
 //!     spheres.push(Sphere {
 //!         position: position,
@@ -74,8 +74,6 @@
 #[cfg(all(feature = "bench", test))]
 extern crate test;
 
-pub use nalgebra;
-
 /// A minimal floating value used as a lower bound.
 /// TODO: replace by/add ULPS/relative float comparison methods.
 pub const EPSILON: f32 = 0.00001;
@@ -86,6 +84,7 @@ pub mod bounding_hierarchy;
 pub mod bvh;
 pub mod flat_bvh;
 pub mod ray;
+pub mod math;
 mod utils;
 
 #[cfg(test)]
